@@ -1,111 +1,206 @@
-// Binary tree using linked list
 #include <stdio.h>
-#include<stdlib.h>
-struct TreeNode{
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX 100
+
+// Binary tree node
+struct TreeNode {
     struct TreeNode* left;
     int data;
     struct TreeNode* right;
 };
-struct TreeNode* createNode(int value){
-struct TreeNode* node=(struct TreeNode*)malloc(sizeof(struct TreeNode));
-node->data=value;
-node->left=node->right=NULL;
-return node;
-}
-void insert(int value){
 
+// Global root
+struct TreeNode* root = NULL;
+
+// Queue for level order
+struct TreeNode* queue[MAX];
+int front = 0, rear = 0;
+
+void enqueue(struct TreeNode* node) {
+    queue[rear++] = node;
 }
-void preorder(struct TreeNode* root){
-    if(root!=NULL){
-        printf("%d",root->data);
+
+struct TreeNode* dequeue() {
+    return queue[front++];
+}
+
+bool isQueueEmpty() {
+    return front == rear;
+}
+
+// Create a new node
+struct TreeNode* createNode(int value) {
+    struct TreeNode* node = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+    node->data = value;
+    node->left = node->right = NULL;
+    return node;
+}
+
+// Insert into BST
+struct TreeNode* insertNode(struct TreeNode* node, int value) {
+    if (node == NULL)
+        return createNode(value);
+    if (value < node->data)
+        node->left = insertNode(node->left, value);
+    else
+        node->right = insertNode(node->right, value);
+    return node;
+}
+
+void insert(int value) {
+    root = insertNode(root, value);
+}
+
+// Traversals
+void preorder(struct TreeNode* root) {
+    if (root != NULL) {
+        printf("%d ", root->data);
         preorder(root->left);
         preorder(root->right);
     }
 }
-void inorder(struct TreeNode*root){
-    if(root!=NULL){
-    inorder(root->left);
-    printf("%d",root->data);
-   inorder(root->right);
+
+void inorder(struct TreeNode* root) {
+    if (root != NULL) {
+        inorder(root->left);
+        printf("%d ", root->data);
+        inorder(root->right);
     }
 }
-void postorder(struct TreeNode* root){
-    if(root!=NULL){
+
+void postorder(struct TreeNode* root) {
+    if (root != NULL) {
         postorder(root->left);
-       postorder(root->right);
-       printf("%d",root->data);
-} }
-
-void levelorder(struct TreeNode*root){
-    
+        postorder(root->right);
+        printf("%d ", root->data);
+    }
 }
 
-int  search(int root, int value){
-    
+void levelorder(struct TreeNode* root) {
+    if (root == NULL) return;
+    front = rear = 0;
+    enqueue(root);
+    while (!isQueueEmpty()) {
+        struct TreeNode* current = dequeue();
+        printf("%d ", current->data);
+        if (current->left) enqueue(current->left);
+        if (current->right) enqueue(current->right);
+    }
 }
 
-void delete(int root,int value){
-    
+// Search
+int search(struct TreeNode* root, int value) {
+    if (root == NULL)
+        return 0;
+    if (root->data == value)
+        return 1;
+    else if (value < root->data)
+        return search(root->left, value);
+    else
+        return search(root->right, value);
 }
-int main(){
-    
-    int n,choice,index,target,pos;
-   while(1){
-    printf("1. Insert\n");
-    printf("2. Pre-Order\n");
-    printf("3. In-Order\n");
-    printf("4. Post-order\n");
-    printf("5. Level Order\n");
-    printf("6.Search\n");
-    printf("7.Delete\n");
-    printf("8.Exit\n");
-    printf("Enter Choice");
-    scanf("%d",&choice);
-  switch(choice){
-    case 1:
-    printf("Enter the value of N : ");
-    scanf("%d",&n);
-    insert(n);
-    break;
-    case 2:
-    printf("\n Pre-Order: ");
-    preorder(0);
-    break;
-    case 3:
-    printf("\n In-Order: ");
-    inorder(0);
-    break;
-    case 4:
-    printf("\n Post-Order: ");
-    postorder(0);
-    break;
-    case 5:
-    printf("\n Post-Order: ");
-    postorder(0);
-    break;
-    case 6:
-  printf("Enter Target");
- scanf("%d",&target);
- pos = search(target);
-     if(pos == -1)
-     printf("Element not found\n");
-     else
-     printf("Element found at index %d\n", pos);
-         break;
-        case 7:
-            printf("Enter element to delete:");
-            scanf("%d",&target);
-            delete(target);
-            break;
 
-  case 8:
-        exit(0);
-         break;
-         default:
-      printf("Invalid Choice !!!!\n");
+// Delete
+struct TreeNode* findMin(struct TreeNode* node) {
+    while (node->left != NULL)
+        node = node->left;
+    return node;
+}
+
+struct TreeNode* deleteNode(struct TreeNode* root, int value) {
+    if (root == NULL) return NULL;
+    if (value < root->data)
+        root->left = deleteNode(root->left, value);
+    else if (value > root->data)
+        root->right = deleteNode(root->right, value);
+    else {
+        if (root->left == NULL) {
+            struct TreeNode* temp = root->right;
+            free(root);
+            return temp;
         }
-        printf("\n");
-        system("pause"); // without pressing system will not work
- }
-return 0;
+        else if (root->right == NULL) {
+            struct TreeNode* temp = root->left;
+            free(root);
+            return temp;
+        }
+        struct TreeNode* temp = findMin(root->right);
+        root->data = temp->data;
+        root->right = deleteNode(root->right, temp->data);
+    }
+    return root;
+}
+
+void delete(int value) {
+    root = deleteNode(root, value);
+}
+
+// Main menu
+int main() {
+    int n, choice, target;
+
+    while (1) {
+        printf("\n1. Insert\n");
+        printf("2. Pre-Order\n");
+        printf("3. In-Order\n");
+        printf("4. Post-order\n");
+        printf("5. Level Order\n");
+        printf("6. Search\n");
+        printf("7. Delete\n");
+        printf("8. Exit\n");
+        printf("Enter Choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter the value of N: ");
+                scanf("%d", &n);
+                insert(n);
+                break;
+            case 2:
+                printf("Pre-Order: ");
+                preorder(root);
+                printf("\n");
+                break;
+            case 3:
+                printf("In-Order: ");
+                inorder(root);
+                printf("\n");
+                break;
+            case 4:
+                printf("Post-Order: ");
+                postorder(root);
+                printf("\n");
+                break;
+            case 5:
+                printf("Level-Order: ");
+                levelorder(root);
+                printf("\n");
+                break;
+            case 6:
+                printf("Enter Target: ");
+                scanf("%d", &target);
+                if (search(root, target))
+                    printf("Element found\n");
+                else
+                    printf("Element not found\n");
+                break;
+            case 7:
+                printf("Enter element to delete: ");
+                scanf("%d", &target);
+                delete(target);
+                break;
+            case 8:
+                exit(0);
+                break;
+            default:
+                printf("Invalid Choice !!!!\n");
+        }
+
+        system("pause"); // Windows-only
+    }
+
+    return 0;
 }
